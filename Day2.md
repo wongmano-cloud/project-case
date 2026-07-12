@@ -1,5 +1,4 @@
-# P03 & P04 - Elicitation Plan and Evidence Log (Team A)
-
+# ENGSE206 Day 2 - Team A
 ## สถานการณ์: ห้องประชุมถูกจองซ้ำ (BOARD ROOM A)
 
 ### 1. วางแผนคำถาม (Elicitation Plan) สำหรับ "ผู้ขอจอง (Requester - Sales Team)"
