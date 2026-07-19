@@ -134,37 +134,50 @@
 ---
 
 # P07 — Booking Status Model 
-แบบจำลองวงจรชีวิตและสถานะการจอง (Booking Status Flow)
 
+### ตารางสถานะการจอง (State Transition Table)
+| สถานะเริ่มต้น (Current State) | เหตุการณ์ / เงื่อนไข (Trigger / Transition) | สถานะใหม่ (Next State) | รหัสอ้างอิง |
+|---|---|---|---|
+| ไม่มีสถานะ / ว่าง | ผู้ขอจองส่งคำขอผ่านระบบกลาง (submit) | Received (รับเรื่องแล้ว) | FR-A-01, FR-A-03 |
+| Received (รับเรื่องแล้ว) | แอดมินเปิดระบบและเริ่มตรวจสอบคิว/นโยบาย (accept for review) | Pending Approval (รอพิจารณา) | FR-A-01, FR-A-04 |
+| Received (รับเรื่องแล้ว) | ผู้ขอจองกดยกเลิกเองก่อนแอดมินเปิดตรวจ (cancel before decision) | Cancelled (ยกเลิกแล้ว) | FR-A-01, FR-A-05 |
+| Pending Approval (รอพิจารณา) | ผู้ขอจองกดยกเลิกคำขอระหว่างรอตรวจสอบ (cancel before decision) | Cancelled (ยกเลิกแล้ว) | FR-A-05 |
+| Pending Approval (รอพิจารณา) | แอดมินตรวจสอบแล้วคิวว่างและตรงตามนโยบาย (approve) | Approved (อนุมัติแล้ว / จองสำเร็จ) | FR-A-01, FR-A-04, BR-A-01 |
+| Pending Approval (รอพิจารณา) | แอดมินพบว่าคิวซ้อนหรือผิดนโยบายจึงกดปฏิเสธพร้อมใส่เหตุผล (reject + reason) | Rejected (ไม่อนุมัติ) | FR-A-01, FR-A-04 |
+| Approved (อนุมัติแล้ว) | ผู้ใช้งานขอยกเลิกหรือเคลียร์ห้องหลังจากได้สิทธิ์แล้ว (cancel under rule) | Cancelled (ยกเลิกแล้ว) | FR-A-05 |
+| Cancelled / Rejected | ระบบปลดล็อกและคืนสิทธิ์ห้องประชุมเข้าสู่ระบบส่วนกลางอัตโนมัติ | ไม่มีสถานะ / ว่าง | FR-A-01, FR-A-02 |
+
+### แบบจำลองวงจรชีวิตและสถานะการจอง (Booking Status Flow)
 ```mermaid
 stateDiagram-v2
-    [*] --> Received : Submit Request (UC-A-01)
+    [*] --> Received : Submit Request
     
-    state "Received / Pending Approval" as Received
-    note right of Received
-        รอการตรวจสอบจากแอดมิน
-        (ยังไม่มีสิทธิ์เข้าใช้ห้อง)
-    end note
+    Received --> PendingApproval : Admin accepts for review
+    Received --> Cancelled : Requester cancels
     
-    Received --> Approved : Admin Approves (UC-A-02)
-    Received --> Rejected : Admin Rejects (UC-A-02)
-    Received --> Cancelled : Requester Cancels (UC-A-03)
+    state "Pending Approval (รอพิจารณา)" as PendingApproval
+    PendingApproval --> Approved : Admin approves
+    PendingApproval --> Rejected : Admin rejects
+    PendingApproval --> Cancelled : Requester cancels
     
-    state "Approved (อนุมัติ)" as Approved
-    note right of Approved
-        ได้สิทธิ์ใช้งานห้องสมบูรณ์
-    end note
+    state "Approved (อนุมัติแล้ว)" as Approved
+    Approved --> Cancelled : Requester cancels (under rule)
     
     state "Rejected (ไม่อนุมัติ)" as Rejected
-    note right of Rejected
-        ปฏิเสธคำขอ (คืนคิวว่าง)
-    end note
+    state "Cancelled (ยกเลิกแล้ว)" as Cancelled
     
-    state "Cancelled (ยกเลิกคำขอ)" as Cancelled
-    
-    Approved --> Cancelled : Requester Cancels (UC-A-03)
-    
-    Approved --> [*]
-    Rejected --> [*]
-    Cancelled --> [*]
+    Rejected --> [*] : Release Room
+    Cancelled --> [*] : Release Room
+    Approved --> [*] : Completion
 ```
+
+---
+
+# ช่องโหว่เชิงระบบ (System Gaps):
+- **คำขอค้างในระบบ:** ยังไม่มีเงื่อนไขตัดสิทธิ์คำขอที่ค้างอยู่ในสถานะ Pending Approval จนเลยเวลาใช้งานจริง ซึ่งทำให้บล็อกคิวผู้อื่นโดยไม่จำเป็น 
+- **การจัดการคิวสำรอง:** ยังไม่มีข้อกำหนดว่าถ้ารายการแรกถูก Rejected หรือ Cancelled ระบบจะขยับคิวถัดไปขึ้นมาพิจารณาโดยอัตโนมัติอย่างไร
+
+# ประเด็นนโยบายที่ต้องเคลียร์ (Open Issues):
+- **OI-A-01:** ผู้ใช้กดยกเลิกสิทธิ์ (Cancelled) ได้ช้าสุดกี่ชั่วโมงก่อนเริ่มประชุม มีเวลาตัดรอบ (Cutoff Time) หรือไม่ 
+- **OI-A-02:** หากโดน Rejected ผู้ใช้สามารถแก้ไขเวลาบนรายการเดิมเพื่อส่งตรวจใหม่ได้เลย หรือต้องสร้างคำขอใหม่ทั้งหมด 
+- **OI-A-03:** กฎเกณฑ์กลางในการตัดสินคิวของแอดมินคืออะไร (เช่น กิจกรรมพบลูกค้าภายนอกได้สิทธิ์ก่อนประชุมภายใน) เพื่อลดการใช้ดุลยพินิจส่วนตัว
