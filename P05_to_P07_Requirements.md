@@ -80,6 +80,53 @@
 
 ## 2. Use Cases
 
+### แผนภาพ Use Case Diagram (ระบบจองห้องประชุมส่วนกลาง)
+```mermaid
+graph LR
+    %% Actors
+    Requester((ผู้ขอจอง<br/>Requester))
+    Admin((เจ้าหน้าที่แอดมิน<br/>Admin))
+
+    %% Use Cases
+    subgraph ระบบจองห้องประชุมส่วนกลาง
+        UC1([UC-A-01<br/>ส่งคำขอจอง<br/>ห้องประชุม])
+        UC2([UC-A-02<br/>ระบบส่วนกลางรับเรื่อง])
+        UC3([UC-A-03<br/>แอดมินเปิดระบบและเริ่มตรวจสอบ<br/>นโยบาย])
+        UC4([UC-A-04<br/>แอดมินพิจารณาอนุมัติหรือ<br/>ตามนโยบาย])
+        UC5([UC-A-05<br/>ผู้ขอจองกดยกเลิก<br/>ก่อนแอดมินเปิดตรวจ])
+        UC6([UC-A-06<br/>ระบบส่วนกลาง<br/>ยกเลิกแล้ว])
+        UC7([UC-A-07<br/>แอดมินพบว่าคิวซ้อนหรือผิด<br/>นโยบายจึงกดปฏิเสธพร้อมใส่เหตุผล])
+        UC8([UC-A-08<br/>บันทึกเหตุผลการปฏิเสธ])
+        UC9([UC-A-09<br/>ผู้ใช้งานขอยกเลิกหรือแอดมิน<br/>ยกเลิกหลังจากได้สิทธิ์แล้ว])
+        UC10([UC-A-10<br/>ระบบส่วนกลาง<br/>ยกเลิกแล้ว])
+        UC11([UC-A-011<br/>ระบบกลับสู่ไม่มี<br/>สถานะ/ว่าง])
+    end
+
+    %% Actor to Use Cases
+    Requester --- UC1
+    Requester --- UC5
+    Requester --- UC9
+    
+    Admin --- UC3
+    Admin --- UC4
+    Admin --- UC7
+    
+    %% Relationships
+    UC1 -. "«include»" .-> UC2
+    UC2 -. "«include»" .-> UC3
+    UC5 -. "«include»" .-> UC6
+    UC6 -. "«include»" .-> UC11
+    UC9 -. "«include»" .-> UC10
+    UC10 -. "«include»" .-> UC11
+    
+    UC7 -. "«extend»" .-> UC4
+    UC7 -. "«include»" .-> UC8
+    UC8 -. "«include»" .-> UC11
+    
+    classDef actor fill:#fff,stroke:#000,stroke-width:2px,color:#000;
+    class Requester,Admin actor;
+```
+
 ### UC-A-01 — Submit Room Booking Request
 - **Primary Actor:** ผู้ขอจองกิจกรรม (Requester) 
 - **Main Flow:**
