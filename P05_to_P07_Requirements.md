@@ -80,8 +80,6 @@
 
 ## 2. Use Cases
 
-### แผนภาพ Use Case Diagram (ระบบจองห้องประชุมส่วนกลาง)
-![Use Case Diagram](usecase-diagram.png)
 
 ### UC-A-01 — Submit Room Booking Request
 - **Primary Actor:** ผู้ขอจองกิจกรรม (Requester) 
@@ -136,7 +134,10 @@
 
 ---
 
-# P07 — Booking Status Model 
+# P07 — Use Case Diagram & Booking Status Model 
+
+### แผนภาพ Use Case Diagram (ระบบจองห้องประชุมส่วนกลาง)
+![Use Case Diagram](usecase-diagram.png)
 
 ### ตารางสถานะการจอง (State Transition Table)
 | สถานะเริ่มต้น (Current State) | เหตุการณ์ / เงื่อนไข (Trigger / Transition) | สถานะใหม่ (Next State) | รหัสอ้างอิง |
